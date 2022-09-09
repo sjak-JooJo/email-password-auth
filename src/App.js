@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, getAuth, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
@@ -14,8 +14,17 @@ function App() {
   const [email, setEmail] = useState('');
   const [registered, setRegistered] = useState(false);
   const [error, setError] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [validated, setValidated] = useState(false);
+
+
+  const handleNameBlur = (event) =>{
+
+    setName(event.target.value);
+  }
+
+
 
   const handleEmailBlur = (event) => {
     setEmail(event.target.value);
@@ -65,6 +74,7 @@ function App() {
           setEmail('');
           setPassword('');
           verifyEmail();
+          setUserName();
         })
         .catch(error => {
           console.error(error);
@@ -85,10 +95,25 @@ function App() {
     })
   }
 
+
+
+  const setUserName = () =>{
+    updateProfile(auth.currentUser, {
+      displayName:name
+    })
+    .then(() =>{
+      console.log('updating name');
+    })
+  }
+
+
   const verifyEmail = () =>{
     sendEmailVerification(auth.currentUser)
     .then(() => {
       console.log('Email verification sent');
+    })
+    .catch(error =>{
+      setError(error.message);
     })
   }
 
@@ -99,6 +124,14 @@ function App() {
       <div className="registration w-50 mx-auto mt-5">
         <h2 className="text-primary">Please {registered ? 'Login' : 'Register'}</h2>
         <Form noValidate validated={validated} onSubmit={handleFormSubmit} >
+          { !registered && <Form.Group className="mb-3" controlId="formBasicEmail">
+            <Form.Label>Your Name</Form.Label>
+            <Form.Control onBlur={handleNameBlur} type="text" placeholder="Enter Name" required />
+
+            <Form.Control.Feedback type="invalid">
+              Please Provide your name.
+            </Form.Control.Feedback>
+          </Form.Group>}
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
             <Form.Control onBlur={handleEmailBlur} type="email" placeholder="Enter email" required />
@@ -121,6 +154,7 @@ function App() {
           <Form.Group className="mb-3" controlId="formBasicCheckbox">
             <Form.Check onChange={handleRegisteredChange} type="checkbox" label="Already Registered?" />
           </Form.Group>
+          <p className="text-danger">{'Success'}</p> 
           <p className="text-danger">{error}</p> 
           <Button onClick={handlePasswordReset} variant="link">Forget Password ?</Button><br />
           <Button variant="primary" type="submit">
